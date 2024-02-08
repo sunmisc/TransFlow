@@ -1,4 +1,4 @@
-**TransFlow** is an object-oriented framework for uploading your audio recordings
+**TransFlow** is an object-oriented framework for uploading your audios
 (for example VK) to your device, in this case in MP3 format
 
 The author was very inspired by the new feature - Fibers (Virtual Threads)
