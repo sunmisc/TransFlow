@@ -12,17 +12,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 import java.util.Spliterator;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 
 public class Kek {
-
-    private static final int PARALLELISM = Math.clamp(
-            Runtime.getRuntime().availableProcessors() >>> 1,
-            1, 8
-    );
     private final PipeSource source;
     private final Path to;
 
@@ -30,7 +22,6 @@ public class Kek {
         this.source = source;
         this.to = path;
     }
-
 
     public static void main(String[] args) {
         try (InputStream inputStream =
@@ -64,28 +55,29 @@ public class Kek {
 
         System.out.println("size estimate: "+size);
         try (ExecutorService executor =
-                     // maybe fiber, but deep stack and native...
-                     Executors.newWorkStealingPool(PARALLELISM)) {
+                     // maybe fiber, but deep stack...
+                     Executors.newVirtualThreadPerTaskExecutor()) {
             Download<Audio> download = new VDownload(to);
             int progress = 0;
             progressBar(0); // init
             do {
-                List<Callable<Object>> batch = new LinkedList<>();
+                List<Future<?>> batch = new LinkedList<>();
 
                 sp.forEachRemaining(p -> batch.add(
-                        Executors.callable(() -> {
+                        executor.submit(() -> {
                             try {
                                 download.download(p);
                             } catch (Exception ignored) { }
                         }))
                 );
                 // waiting for batch to load
-                for (Future<?> ignored : executor.invokeAll(batch)) {
+                for (Future<?> f : batch) {
+                    f.get(); // wait
                     double p = ((double) progress++ / size) * 100;
                     progressBar(p);
                 }
             } while ((sp = sp.trySplit()) != null);
-        } catch (InterruptedException e) {
+        } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException(e);
         }
     }
