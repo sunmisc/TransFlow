@@ -21,4 +21,4 @@ https://id.vk.com/about/business/go/docs/ru/vkid/latest/oauth-vkontakte/implicit
 - save_files_to=Save location
 
 ## Build
-mvn clean package
+`mvn clean package`
