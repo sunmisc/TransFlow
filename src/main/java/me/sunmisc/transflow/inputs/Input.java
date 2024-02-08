@@ -19,21 +19,21 @@ public interface Input {
             this.inputs = inputs;
         }
 
-
         @Override
         public Optional<byte[]> stream() throws Exception {
             byte[] result = EMPTY;
 
             for (Input input : inputs) {
-                byte[] buff = input
-                        .stream()
-                        .orElse(EMPTY);
+                byte[] buff = input.stream().orElse(EMPTY);
+                // COW
                 final int len = result.length, n = buff.length;
                 byte[] newElements = Arrays.copyOf(result, len + n);
                 System.arraycopy(buff, 0, newElements, len, n);
                 result = newElements;
             }
-            return Optional.of(result);
+            return result == EMPTY
+                    ? Optional.empty()
+                    : Optional.of(result);
         }
     }
 }

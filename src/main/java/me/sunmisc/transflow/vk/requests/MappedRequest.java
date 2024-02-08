@@ -2,7 +2,6 @@ package me.sunmisc.transflow.vk.requests;
 
 
 import me.sunmisc.transflow.inputs.Input;
-import me.sunmisc.transflow.vk.VkHead;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -12,7 +11,7 @@ import java.util.Optional;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
 
-public class MappedRequest implements Request, VkHead {
+public class MappedRequest implements Input {
 
     private final Input origin;
 

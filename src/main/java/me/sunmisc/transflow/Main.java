@@ -1,31 +1,34 @@
 package me.sunmisc.transflow;
 
 import me.sunmisc.transflow.text.PercentBarText;
-import me.sunmisc.transflow.vk.pipe.VDownload;
-import me.sunmisc.transflow.vk.pipe.VPipeSource;
+import me.sunmisc.transflow.vk.pipeline.VDownload;
+import me.sunmisc.transflow.vk.pipeline.VPipeSource;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.http.HttpClient;
 import java.nio.file.Path;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Properties;
+import java.util.Queue;
 import java.util.Spliterator;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
-public class Kek {
+public class Main {
     private final PipeSource source;
     private final Path to;
 
-    public Kek(PipeSource source, Path path) {
+    public Main(PipeSource source, Path path) {
         this.source = source;
         this.to = path;
     }
 
     public static void main(String[] args) {
         try (InputStream inputStream =
-                     Kek.class.getResourceAsStream(
+                     Main.class.getResourceAsStream(
                              "/config.properties")) {
             Properties properties = new Properties();
             properties.load(inputStream);
@@ -35,7 +38,7 @@ public class Kek {
                 int id = Integer.parseInt(properties.getProperty("playlist_id"));
                 Path path = Path.of(properties.getProperty("save_files_to"));
 
-                new Kek(
+                new Main(
                         new VPipeSource(
                                 httpClient,
                                 token, id
@@ -53,16 +56,20 @@ public class Kek {
 
         long size = source.estimateSize();
 
-        System.out.println("size estimate: "+size);
+        System.out.println("size estimate: " + size);
+
+        // You can use FJP with asyncMode = true
+        // Then we have a small guarantee on FIFO
+        // therefore, it is better to call invokeAll not in the reverse order
+        // (as for LIFO), but in the same order, but can be optimized a little
         try (ExecutorService executor =
                      // maybe fiber, but deep stack...
                      Executors.newVirtualThreadPerTaskExecutor()) {
             Download<Audio> download = new VDownload(to);
             int progress = 0;
             progressBar(0); // init
+            Queue<Future<?>> batch = new LinkedList<>();
             do {
-                List<Future<?>> batch = new LinkedList<>();
-
                 sp.forEachRemaining(p -> batch.add(
                         executor.submit(() -> {
                             try {
@@ -71,13 +78,19 @@ public class Kek {
                         }))
                 );
                 // waiting for batch to load
-                for (Future<?> f : batch) {
-                    f.get(); // wait
-                    double p = ((double) progress++ / size) * 100;
-                    progressBar(p);
+                // clearing rather than creating a new queue to help GC
+                Future<?> f;
+                while ((f = batch.poll()) != null) {
+                    try {
+                        f.get(); // wait
+                    } catch (ExecutionException ignored) {
+                    } finally {
+                        double p = ((double) progress++ / size) * 100;
+                        progressBar(p);
+                    }
                 }
             } while ((sp = sp.trySplit()) != null);
-        } catch (InterruptedException | ExecutionException e) {
+        } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
     }

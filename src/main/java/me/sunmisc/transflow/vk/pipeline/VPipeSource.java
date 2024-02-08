@@ -1,4 +1,4 @@
-package me.sunmisc.transflow.vk.pipe;
+package me.sunmisc.transflow.vk.pipeline;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -12,9 +12,12 @@ import me.sunmisc.transflow.vk.requests.VkRequest;
 
 import java.io.IOException;
 import java.net.http.HttpClient;
-import java.util.*;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.StreamSupport;
 
 public class VPipeSource implements PipeSource {
 
@@ -22,15 +25,16 @@ public class VPipeSource implements PipeSource {
             = new ObjectMapper();
 
     // threshold
-    private static final int DEFAULT_PARTITION = 4;
+    private static final int DEFAULT_PARTITION = 64;
 
     private final Spliterator<Audio> spliterator;
 
     public VPipeSource(Function<Integer, Request> partition) {
-        this.spliterator = new PartitionPlaylist(
-                partition, 0,
-                new Audio[0], Integer.MAX_VALUE
-        ).trySplit();
+        this.spliterator = Objects.requireNonNull(
+                new PartitionPlaylist(
+                        partition, 0,
+                        new Audio[0], Integer.MAX_VALUE
+                ).trySplit(), "failed to split source");
     }
 
     public VPipeSource(HttpClient client, String token, int ownerId) {
@@ -67,8 +71,8 @@ public class VPipeSource implements PipeSource {
         return spliterator.characteristics();
     }
 
-    private static final class PartitionPlaylist implements Spliterator<Audio> {
-
+    private static final class PartitionPlaylist
+            implements Spliterator<Audio> {
         private final Function<Integer, Request> function;
         private final int offset;
 
@@ -105,25 +109,18 @@ public class VPipeSource implements PipeSource {
                 Request request = function.apply(off);
                 return request.stream().map(x -> {
                     try {
-
                         JsonNode node = OBJECT_MAPPER.readTree(x);
                         int estimateSize = node.findValue("count").asInt();
 
-                        List<Audio> list = new LinkedList<>();
-                        node.findValue("items")
-                                .elements()
-                                .forEachRemaining(r -> list.add(
-                                        new VEncryptedAudio(
-                                                new VAudio(r))
-                                ));
+                        Audio[] items = StreamSupport
+                                .stream(node.findValue("items").spliterator(), false)
+                                .map(r -> new VEncryptedAudio(new VAudio(r)))
+                                .toArray(Audio[]::new);
 
-                        List<Audio> immutable = Collections.unmodifiableList(list);
-
-                        return immutable.isEmpty() ? null : new PartitionPlaylist(
-                                function,
-                                off,
-                                immutable.toArray(Audio[]::new),
-                                estimateSize);
+                        return items.length == 0 ? null
+                                : new PartitionPlaylist(
+                                        function, off, items, estimateSize
+                        );
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }

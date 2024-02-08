@@ -1,4 +1,4 @@
-package me.sunmisc.transflow.vk.pipe;
+package me.sunmisc.transflow.vk.pipeline;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import me.sunmisc.transflow.Audio;

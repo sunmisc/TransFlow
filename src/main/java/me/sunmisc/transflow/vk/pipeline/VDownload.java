@@ -1,4 +1,4 @@
-package me.sunmisc.transflow.vk.pipe;
+package me.sunmisc.transflow.vk.pipeline;
 
 import me.sunmisc.transflow.Audio;
 import me.sunmisc.transflow.Download;
@@ -22,11 +22,12 @@ public class VDownload implements Download<Audio> {
 
     @Override
     public void download(Audio input) throws Exception {
+        String name = input.name();
+        Path to = path.resolve(name + ".mp3");
+        if (Files.exists(to)) return;
+
         input.stream().ifPresent(bytes -> {
             try {
-                String name = input.name();
-                Path to = path.resolve(name + ".mp3");
-                if (Files.exists(to)) return;
                 Path tempFile = Files.createTempFile(path, name, ".ts");
                 Files.write(tempFile, bytes);
 

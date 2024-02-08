@@ -1,8 +1,7 @@
-package me.sunmisc.transflow.vk.pipe;
+package me.sunmisc.transflow.vk.pipeline;
 
 import me.sunmisc.transflow.Audio;
 import me.sunmisc.transflow.inputs.Aes128TransportStream;
-import me.sunmisc.transflow.inputs.CachedInput;
 import me.sunmisc.transflow.inputs.Input;
 import me.sunmisc.transflow.inputs.NetworkInput;
 import me.sunmisc.transflow.tls.Playlist;
@@ -54,10 +53,8 @@ public class VEncryptedAudio implements Audio {
                                         keyUri.indexOf('"') + 1,
                                         keyUri.lastIndexOf('"'));
 
-                                return new CachedInput(
-                                        new Aes128TransportStream(src,
-                                                new NetworkInput(URI.create(keyUri))
-                                        )
+                                return new Aes128TransportStream(src,
+                                        new NetworkInput(URI.create(keyUri))
                                 );
                             }
                             return src;
