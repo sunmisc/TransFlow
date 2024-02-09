@@ -38,6 +38,8 @@ public class VDownload implements Download<Audio> {
                         "-loglevel", "error",
                         "-hide_banner",
                         "-write_id3v2", "1",
+                        "-metadata", "artist=" + input.author(),
+                        "-metadata", "title=" + input.name(),
                         "-c", "copy", to.toString());
 
                 // non-blocking

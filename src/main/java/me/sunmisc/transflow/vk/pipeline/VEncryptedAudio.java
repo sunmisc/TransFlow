@@ -47,11 +47,9 @@ public class VEncryptedAudio implements Audio {
 
                             if (method.equals("AES-128")) {
 
-                                String keyUri = prop.get("URI");
-
-                                keyUri = keyUri.substring(
-                                        keyUri.indexOf('"') + 1,
-                                        keyUri.lastIndexOf('"'));
+                                String keyUri = Objects.requireNonNull(
+                                        prop.get("URI"),
+                                        "public key not found");
 
                                 return new Aes128TransportStream(src,
                                         new NetworkInput(URI.create(keyUri))
