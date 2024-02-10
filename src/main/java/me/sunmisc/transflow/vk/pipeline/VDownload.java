@@ -29,32 +29,25 @@ public class VDownload implements Download<Audio> {
         input.stream().ifPresent(bytes -> {
             try {
                 Path tempFile = Files.createTempFile(path, name, ".ts");
-                Files.write(tempFile, bytes);
+                try {
+                    Files.write(tempFile, bytes);
+                    ProcessBuilder pb = new ProcessBuilder(
+                            FFMPEG, "-y", "-i",
+                            tempFile.toString(),
+                            "-dn",
+                            "-loglevel", "error",
+                            "-write_id3v2", "1",
+                            "-metadata", "artist=" + input.author(),
+                            "-metadata", "title=" + input.name(),
+                            "-metadata", "album=" + input.properties()
+                            .getOrDefault("album", "Unknown"),
+                            "-c", "copy", to.toString());
 
-                ProcessBuilder pb = new ProcessBuilder(
-                        FFMPEG, "-y", "-i",
-                        tempFile.toString(),
-                        "-map", "0", "-dn",
-                        "-loglevel", "error",
-                        "-hide_banner",
-                        "-write_id3v2", "1",
-                        "-metadata", "artist=" + input.author(),
-                        "-metadata", "title=" + input.name(),
-                        "-c", "copy", to.toString());
-
-                // non-blocking
-                pb.inheritIO()
-                        .start()
-                        .toHandle()
-                        .onExit()
-                        .whenComplete((r,t) -> {
-                            try {
-                                Files.deleteIfExists(tempFile);
-                            } catch (IOException e) {
-                                throw new RuntimeException(e);
-                            }
-                        });
-            } catch (IOException e) {
+                    pb.inheritIO().start().waitFor();
+                } finally {
+                    Files.deleteIfExists(tempFile);
+                }
+            } catch (IOException | InterruptedException e) {
                 throw new RuntimeException(e);
             }
         });

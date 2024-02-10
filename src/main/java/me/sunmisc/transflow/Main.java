@@ -1,7 +1,7 @@
 package me.sunmisc.transflow;
 
 import me.sunmisc.transflow.text.PercentBarText;
-import me.sunmisc.transflow.vk.pipeline.VDownload;
+import me.sunmisc.transflow.vk.pipeline.FfmpegDownload;
 import me.sunmisc.transflow.vk.pipeline.VPipeSource;
 
 import java.io.IOException;
@@ -16,6 +16,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Main {
     private final PipeSource source;
@@ -58,6 +59,7 @@ public class Main {
 
         System.out.println("size estimate: " + size);
 
+        System.out.println("loading playlists...");
         // You can use FJP with asyncMode = true
         // Then we have a small guarantee on FIFO
         // therefore, it is better to call invokeAll not in the reverse order
@@ -65,32 +67,30 @@ public class Main {
         try (ExecutorService executor =
                      // maybe fiber, but deep stack...
                      Executors.newVirtualThreadPerTaskExecutor()) {
-            Download<Audio> download = new VDownload(to);
-            int progress = 0;
-            progressBar(0); // init
+            Download<Audio> download = new FfmpegDownload(to);
             Queue<Future<?>> batch = new LinkedList<>();
+
+            final AtomicInteger progress = new AtomicInteger();
             do {
                 sp.forEachRemaining(p -> batch.add(
                         executor.submit(() -> {
                             try {
                                 download.download(p);
-                            } catch (Exception ignored) { }
+                            } catch (Exception ignored) {
+                            } finally {
+                                double q = ((double)
+                                        progress.getAndIncrement() / size) * 100;
+                                progressBar(q);
+                            }
                         }))
                 );
                 // waiting for batch to load
                 // clearing rather than creating a new queue to help GC
                 Future<?> f;
-                while ((f = batch.poll()) != null) {
-                    try {
-                        f.get(); // wait
-                    } catch (ExecutionException ignored) {
-                    } finally {
-                        double p = ((double) progress++ / size) * 100;
-                        progressBar(p);
-                    }
-                }
+                while ((f = batch.poll()) != null)
+                    f.get(); // wait
             } while ((sp = sp.trySplit()) != null);
-        } catch (InterruptedException e) {
+        } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException(e);
         }
     }

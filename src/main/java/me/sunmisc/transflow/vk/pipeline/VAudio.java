@@ -49,7 +49,13 @@ public class VAudio implements Audio {
     @Override
     public Map<String, String> properties() {
         return Map.of(
-                "url", node.findValue("url").asText()
+                "url", node
+                        .findValue("url")
+                        .asText(),
+                "album", node
+                        .findValue("album")
+                        .findValue("title")
+                        .asText()
         );
     }
 }
