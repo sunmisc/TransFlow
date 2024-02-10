@@ -5,7 +5,7 @@ import me.sunmisc.transflow.inputs.EnvelopeInput;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
-public class TokenInput extends EnvelopeInput {
+public final class TokenInput extends EnvelopeInput {
     private static final String API_VERSION = "5.139";
 
     // We do not allow the token to be “drained” through Reflection

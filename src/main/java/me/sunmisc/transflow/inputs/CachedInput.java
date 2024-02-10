@@ -4,7 +4,7 @@ import me.sunmisc.transflow.util.Lazy;
 
 import java.util.Optional;
 
-public class CachedInput implements Input {
+public final class CachedInput implements Input {
     private final Lazy<byte[]> cached;
 
     public CachedInput(Input origin) {

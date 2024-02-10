@@ -15,7 +15,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 
-public class VEncryptedAudio implements Audio {
+public final class VEncryptedAudio implements Audio {
 
     private final Audio origin;
 

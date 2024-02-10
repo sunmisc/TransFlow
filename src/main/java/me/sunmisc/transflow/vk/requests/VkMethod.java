@@ -7,7 +7,7 @@ import me.sunmisc.transflow.vk.TokenInput;
 import java.util.List;
 import java.util.stream.Stream;
 
-public class VkMethod extends EnvelopeInput
+public final class VkMethod extends EnvelopeInput
         implements Request {
 
     public VkMethod(Input origin, String accessToken) {

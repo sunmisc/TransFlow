@@ -1,6 +1,6 @@
 package me.sunmisc.transflow.text;
 
-public class PercentBarText implements Text {
+public final class PercentBarText implements Text {
     private static final int TOTAL_PROGRESS = 100;
     private static final int BAR_WIDTH = 50;
     private static final String FORMAT

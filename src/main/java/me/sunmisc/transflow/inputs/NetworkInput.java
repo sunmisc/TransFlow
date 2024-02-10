@@ -4,14 +4,13 @@ import java.io.InputStream;
 import java.net.URI;
 import java.util.Optional;
 
-public class NetworkInput implements Input {
+public final class NetworkInput implements Input {
 
     private final URI uri;
 
     public NetworkInput(URI uri) {
         this.uri = uri;
     }
-
 
     @Override
     public Optional<byte[]> stream() throws Exception {

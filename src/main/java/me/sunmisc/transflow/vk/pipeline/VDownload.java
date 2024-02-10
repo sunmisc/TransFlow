@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-public class VDownload implements Download<Audio> {
+public final class VDownload implements Download<Audio> {
 
     private static final String FFMPEG =
             Loader.load(org.bytedeco.ffmpeg.ffmpeg.class);
@@ -33,9 +33,8 @@ public class VDownload implements Download<Audio> {
                     Files.write(tempFile, bytes);
                     ProcessBuilder pb = new ProcessBuilder(
                             FFMPEG, "-y", "-i",
-                            tempFile.toString(),
-                            "-dn",
-                            "-loglevel", "error",
+                            tempFile.toString(), "-dn",
+                            "-loglevel", "quiet",
                             "-write_id3v2", "1",
                             "-metadata", "artist=" + input.author(),
                             "-metadata", "title=" + input.name(),

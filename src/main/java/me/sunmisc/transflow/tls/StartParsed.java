@@ -4,7 +4,7 @@ import java.net.URI;
 import java.util.*;
 import java.util.stream.Stream;
 
-public class StartParsed implements Playlist {
+public final class StartParsed implements Playlist {
 
     private static final String END_TOKEN = "EXT-X-ENDLIST";
     private final List<String> lines;

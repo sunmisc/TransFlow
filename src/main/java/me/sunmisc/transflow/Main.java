@@ -1,21 +1,15 @@
 package me.sunmisc.transflow;
 
 import me.sunmisc.transflow.text.PercentBarText;
-import me.sunmisc.transflow.vk.pipeline.FfmpegDownload;
+import me.sunmisc.transflow.vk.pipeline.VDownload;
 import me.sunmisc.transflow.vk.pipeline.VPipeSource;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.http.HttpClient;
 import java.nio.file.Path;
-import java.util.LinkedList;
-import java.util.Properties;
-import java.util.Queue;
-import java.util.Spliterator;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.*;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Main {
@@ -55,11 +49,13 @@ public class Main {
     public void download() {
         Spliterator<Audio> sp = source;
 
-        long size = source.estimateSize();
+        final long size = source.estimateSize();
 
         System.out.println("size estimate: " + size);
 
         System.out.println("loading playlists...");
+
+        Set<String> skipped = ConcurrentHashMap.newKeySet();
         // You can use FJP with asyncMode = true
         // Then we have a small guarantee on FIFO
         // therefore, it is better to call invokeAll not in the reverse order
@@ -67,7 +63,7 @@ public class Main {
         try (ExecutorService executor =
                      // maybe fiber, but deep stack...
                      Executors.newVirtualThreadPerTaskExecutor()) {
-            Download<Audio> download = new FfmpegDownload(to);
+            Download<Audio> download = new VDownload(to);
             Queue<Future<?>> batch = new LinkedList<>();
 
             final AtomicInteger progress = new AtomicInteger();
@@ -77,9 +73,10 @@ public class Main {
                             try {
                                 download.download(p);
                             } catch (Exception ignored) {
+                                skipped.add(p.name() + " " + p.author());
                             } finally {
                                 double q = ((double)
-                                        progress.getAndIncrement() / size) * 100;
+                                        progress.incrementAndGet() / size) * 100;
                                 progressBar(q);
                             }
                         }))
@@ -93,6 +90,8 @@ public class Main {
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException(e);
         }
+        System.out.println("\nskipped: " + skipped.size());
+        System.out.println(String.join("\n", skipped));
     }
     private static void progressBar(double currentProgress) {
         System.out.print(new PercentBarText(currentProgress));

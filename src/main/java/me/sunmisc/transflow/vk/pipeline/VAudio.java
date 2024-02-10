@@ -8,7 +8,7 @@ import java.net.URI;
 import java.util.Map;
 import java.util.Optional;
 
-public class VAudio implements Audio {
+public final class VAudio implements Audio {
     private final JsonNode node;
 
     public VAudio(JsonNode node) {
@@ -53,9 +53,9 @@ public class VAudio implements Audio {
                         .findValue("url")
                         .asText(),
                 "album", node
-                        .findValue("album")
-                        .findValue("title")
-                        .asText()
+                        .path("album")
+                        .path("title")
+                        .asText("Unknown")
         );
     }
 }

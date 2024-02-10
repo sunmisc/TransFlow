@@ -8,7 +8,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-public class VkRequest implements Request {
+public final class VkRequest implements Request {
 
     private final Supplier<Response> input;
 

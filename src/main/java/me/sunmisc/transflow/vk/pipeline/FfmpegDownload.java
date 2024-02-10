@@ -3,11 +3,12 @@ package me.sunmisc.transflow.vk.pipeline;
 import me.sunmisc.transflow.Audio;
 import me.sunmisc.transflow.Download;
 import org.bytedeco.javacpp.Loader;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
 
-public class FfmpegDownload implements Download<Audio> {
+public final class FfmpegDownload implements Download<Audio> {
 
     private static final String FFMPEG =
             Loader.load(org.bytedeco.ffmpeg.ffmpeg.class);
