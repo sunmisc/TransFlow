@@ -5,10 +5,10 @@ import me.sunmisc.transflow.util.Lazy;
 import java.util.Optional;
 
 public final class CachedInput implements Input {
-    private final Lazy<byte[]> cached;
+    private final Lazy<byte[]> lazy;
 
     public CachedInput(Input origin) {
-        this.cached = new Lazy<>(() -> {
+        this.lazy = new Lazy<>(() -> {
             try {
                 return origin.stream().orElse(null);
             } catch (Exception e) {
@@ -19,6 +19,6 @@ public final class CachedInput implements Input {
 
     @Override
     public Optional<byte[]> stream() throws Exception {
-        return Optional.ofNullable(cached.get());
+        return Optional.ofNullable(lazy.get());
     }
 }

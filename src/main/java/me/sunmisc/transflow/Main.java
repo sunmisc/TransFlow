@@ -10,13 +10,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.http.HttpClient;
 import java.nio.file.Path;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Properties;
 import java.util.Set;
 import java.util.Spliterator;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.StructuredTaskScope;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static java.lang.System.out;
 import static java.util.stream.Collectors.joining;
 
 public class Main {
@@ -57,14 +61,13 @@ public class Main {
 
         final long size = source.estimateSize();
 
-        System.out.println("size estimate: " + size);
-
-        System.out.println("loading playlists...");
+        out.println("size estimate: " + size);
 
         Set<CharSequence> skipped = ConcurrentHashMap.newKeySet();
 
         Download<Audio> download = new VDownload(to);
         final AtomicInteger progress = new AtomicInteger();
+        final long start = System.currentTimeMillis();
         do {
             try (final var scope = new StructuredTaskScope<>()) {
                 sp.forEachRemaining(p -> scope.fork(() -> {
@@ -97,11 +100,26 @@ public class Main {
             }
         } while ((sp = sp.trySplit()) != null);
 
-        System.out.println("\nskipped: " + skipped.size());
-        System.out.println(String.join("\n", skipped));
+        long end = System.currentTimeMillis() - start;
+
+        LocalTime time = LocalTime.MIN
+                .plusSeconds(TimeUnit.MILLISECONDS.toSeconds(end));
+
+        out.println(
+                new FormattedText("""
+                        
+                        elapsed time: %s
+                        skipped: %s
+                        %s
+                        """,
+                        DateTimeFormatter.ISO_TIME.format(time),
+                        skipped.size(),
+                        new ConcatText(skipped, "\n")
+                )
+        );
     }
     private static void progressBar(double currentProgress) {
-        System.out.print(new ProgressBarText(currentProgress));
-        System.out.flush();
+        out.print(new ProgressBarText(currentProgress));
+        out.flush();
     }
 }

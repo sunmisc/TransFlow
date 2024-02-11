@@ -1,4 +1,4 @@
-package me.sunmisc.transflow.io;
+package me.sunmisc.transflow.util;
 
 import java.io.InputStream;
 import java.util.Objects;

@@ -1,10 +1,10 @@
 package me.sunmisc.transflow.text;
 
-import java.util.List;
+import java.util.Collection;
 
 public final class ConcatText extends EnvelopeCharSequence {
 
-    public ConcatText(List<CharSequence> list) {
+    public ConcatText(Collection<CharSequence> list) {
         super(() -> {
             StringBuilder builder = new StringBuilder();
             list.forEach(builder::append);
@@ -12,7 +12,7 @@ public final class ConcatText extends EnvelopeCharSequence {
         });
     }
 
-    public ConcatText(List<CharSequence> list, CharSequence delimiter) {
+    public ConcatText(Collection<CharSequence> list, CharSequence delimiter) {
         super(() -> String.join(delimiter, list));
     }
 

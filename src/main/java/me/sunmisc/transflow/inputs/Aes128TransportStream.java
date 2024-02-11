@@ -1,6 +1,6 @@
 package me.sunmisc.transflow.inputs;
 
-import me.sunmisc.transflow.io.SimpleBytesInputStream;
+import me.sunmisc.transflow.util.SimpleBytesInputStream;
 
 import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
