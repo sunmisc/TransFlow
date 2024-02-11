@@ -1,15 +1,17 @@
 package me.sunmisc.transflow.vk.pipeline;
 
 import me.sunmisc.transflow.Audio;
+import me.sunmisc.transflow.Author;
 import me.sunmisc.transflow.Download;
+import me.sunmisc.transflow.text.FilenameNormalized;
 import org.bytedeco.javacpp.Loader;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.stream.Collectors;
 
 public final class VDownload implements Download<Audio> {
-
     private static final String FFMPEG =
             Loader.load(org.bytedeco.ffmpeg.ffmpeg.class);
 
@@ -22,13 +24,16 @@ public final class VDownload implements Download<Audio> {
 
     @Override
     public void download(Audio input) throws Exception {
-        String name = input.name();
+        String name = new FilenameNormalized(
+                input.name()
+        ).toString();
         Path to = path.resolve(name + ".mp3");
         if (Files.exists(to)) return;
 
         input.stream().ifPresent(bytes -> {
             try {
-                Path tempFile = Files.createTempFile(path, name, ".ts");
+                Path tempFile = Files.createTempFile(path,
+                        name, ".ts");
                 try {
                     Files.write(tempFile, bytes);
                     ProcessBuilder pb = new ProcessBuilder(
@@ -36,7 +41,10 @@ public final class VDownload implements Download<Audio> {
                             tempFile.toString(), "-dn",
                             "-loglevel", "quiet",
                             "-write_id3v2", "1",
-                            "-metadata", "artist=" + input.author(),
+                            "-metadata", "artist=" + input
+                            .authors()
+                            .map(Author::name)
+                            .collect(Collectors.joining(", ")),
                             "-metadata", "title=" + input.name(),
                             "-metadata", "album=" + input.properties()
                             .getOrDefault("album", "Unknown"),

@@ -1,6 +1,8 @@
 package me.sunmisc.transflow;
 
-import me.sunmisc.transflow.text.PercentBarText;
+import me.sunmisc.transflow.text.ConcatText;
+import me.sunmisc.transflow.text.FormattedText;
+import me.sunmisc.transflow.text.ProgressBarText;
 import me.sunmisc.transflow.vk.pipeline.VDownload;
 import me.sunmisc.transflow.vk.pipeline.VPipeSource;
 
@@ -8,9 +10,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.http.HttpClient;
 import java.nio.file.Path;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.Properties;
+import java.util.Set;
+import java.util.Spliterator;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.StructuredTaskScope;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import static java.util.stream.Collectors.joining;
 
 public class Main {
     private final PipeSource source;
@@ -45,7 +52,6 @@ public class Main {
             throw new RuntimeException(e);
         }
     }
-
     public void download() {
         Spliterator<Audio> sp = source;
 
@@ -55,46 +61,47 @@ public class Main {
 
         System.out.println("loading playlists...");
 
-        Set<String> skipped = ConcurrentHashMap.newKeySet();
-        // You can use FJP with asyncMode = true
-        // Then we have a small guarantee on FIFO
-        // therefore, it is better to call invokeAll not in the reverse order
-        // (as for LIFO), but in the same order, but can be optimized a little
-        try (ExecutorService executor =
-                     // maybe fiber, but deep stack...
-                     Executors.newVirtualThreadPerTaskExecutor()) {
-            Download<Audio> download = new VDownload(to);
-            Queue<Future<?>> batch = new LinkedList<>();
+        Set<CharSequence> skipped = ConcurrentHashMap.newKeySet();
 
-            final AtomicInteger progress = new AtomicInteger();
-            do {
-                sp.forEachRemaining(p -> batch.add(
-                        executor.submit(() -> {
-                            try {
-                                download.download(p);
-                            } catch (Exception ignored) {
-                                skipped.add(p.name() + " " + p.author());
-                            } finally {
-                                double q = ((double)
-                                        progress.incrementAndGet() / size) * 100;
-                                progressBar(q);
-                            }
-                        }))
-                );
-                // waiting for batch to load
-                // clearing rather than creating a new queue to help GC
-                Future<?> f;
-                while ((f = batch.poll()) != null)
-                    f.get(); // wait
-            } while ((sp = sp.trySplit()) != null);
-        } catch (InterruptedException | ExecutionException e) {
-            throw new RuntimeException(e);
-        }
+        Download<Audio> download = new VDownload(to);
+        final AtomicInteger progress = new AtomicInteger();
+        do {
+            try (final var scope = new StructuredTaskScope<>()) {
+                sp.forEachRemaining(p -> scope.fork(() -> {
+                    try {
+                        download.download(p);
+                    } catch (Exception e) {
+                        skipped.add(
+                                new FormattedText(
+                                        "%s | exception: %s",
+                                        new ConcatText("",
+                                                p.name(), p.authors()
+                                                .map(Author::name)
+                                                .collect(joining(", "))
+                                        ),
+                                        e.getMessage()
+                                )
+                        );
+                    } finally {
+                        double q = ((double)
+                                progress.incrementAndGet() / size) * 100;
+                        progressBar(q);
+                    }
+                    return null;
+                }));
+                // we will process the batch before moving
+                // on to the second one (the service may alarm)
+                scope.join();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        } while ((sp = sp.trySplit()) != null);
+
         System.out.println("\nskipped: " + skipped.size());
         System.out.println(String.join("\n", skipped));
     }
     private static void progressBar(double currentProgress) {
-        System.out.print(new PercentBarText(currentProgress));
+        System.out.print(new ProgressBarText(currentProgress));
         System.out.flush();
     }
 }

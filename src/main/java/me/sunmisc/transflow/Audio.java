@@ -3,14 +3,16 @@ package me.sunmisc.transflow;
 import me.sunmisc.transflow.inputs.Input;
 
 import java.util.Map;
+import java.util.stream.Stream;
 
 public interface Audio extends Input {
 
     long id();
 
-    String name();
+    Stream<Author> authors();
 
-    String author();
+
+    CharSequence name();
 
     int duration();
 

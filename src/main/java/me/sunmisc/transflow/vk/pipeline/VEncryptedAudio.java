@@ -1,6 +1,7 @@
 package me.sunmisc.transflow.vk.pipeline;
 
 import me.sunmisc.transflow.Audio;
+import me.sunmisc.transflow.Author;
 import me.sunmisc.transflow.inputs.Aes128TransportStream;
 import me.sunmisc.transflow.inputs.Input;
 import me.sunmisc.transflow.inputs.NetworkInput;
@@ -13,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 
 public final class VEncryptedAudio implements Audio {
@@ -67,13 +69,13 @@ public final class VEncryptedAudio implements Audio {
     }
 
     @Override
-    public String name() {
+    public CharSequence name() {
         return origin.name();
     }
 
     @Override
-    public String author() {
-        return origin.author();
+    public Stream<Author> authors() {
+        return origin.authors();
     }
 
     @Override
