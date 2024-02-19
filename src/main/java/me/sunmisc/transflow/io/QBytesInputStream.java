@@ -1,20 +1,22 @@
-package me.sunmisc.transflow.util;
+package me.sunmisc.transflow.io;
 
 import java.io.InputStream;
 import java.util.Objects;
 
-public class SimpleBytesInputStream extends InputStream {
+public class QBytesInputStream extends InputStream {
 
     private final byte[] bytes;
     private int pos;
 
-    public SimpleBytesInputStream(byte[] bytes) {
+    public QBytesInputStream(byte[] bytes) {
         this.bytes = bytes;
     }
 
     @Override
     public int read() {
-        return pos < bytes.length ? bytes[pos++] & 255 : -1;
+        return pos < bytes.length
+                ? Byte.toUnsignedInt(bytes[pos++])
+                : -1;
     }
     @Override
     public int read(byte[] b, int off, int len) {

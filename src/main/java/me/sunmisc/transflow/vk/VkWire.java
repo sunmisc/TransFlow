@@ -1,12 +1,13 @@
 package me.sunmisc.transflow.vk;
 
+import me.sunmisc.transflow.io.QBytesInputStream;
 import me.sunmisc.transflow.vk.requests.Request;
 
+import java.io.InputStream;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 public class VkWire implements Wire {
@@ -28,14 +29,18 @@ public class VkWire implements Wire {
                         .headers()
                         .flatMap(x -> Stream.of(x.name(), x.value()))
                         .toArray(String[]::new))
-                .method(method, input
-                        .stream()
-                        .map(HttpRequest.BodyPublishers::ofByteArray)
-                        .orElse(HttpRequest.BodyPublishers.noBody()))
+                .method(method,
+                        HttpRequest.BodyPublishers.ofInputStream(() -> {
+                            try {
+                                return input.stream();
+                            } catch (Exception e) {
+                                throw new RuntimeException(e);
+                            }
+                        }))
                 .build();
         HttpResponse<byte[]> response =
                 client.send(req, HttpResponse.BodyHandlers.ofByteArray());
-        return new WrapReponse(response);
+        return new WrapResponse(response);
     }
 
     @Override
@@ -59,7 +64,7 @@ public class VkWire implements Wire {
         return send(request, "GET");
     }
 
-    private record WrapReponse(
+    private record WrapResponse(
             HttpResponse<byte[]> response
     ) implements Response {
 
@@ -69,8 +74,8 @@ public class VkWire implements Wire {
         }
 
         @Override
-        public Optional<byte[]> stream() {
-            return Optional.of(response.body());
+        public InputStream stream() {
+            return new QBytesInputStream(response.body());
         }
 
         @Override

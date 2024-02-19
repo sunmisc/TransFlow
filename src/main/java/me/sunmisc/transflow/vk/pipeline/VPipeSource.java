@@ -11,6 +11,7 @@ import me.sunmisc.transflow.vk.requests.VkMethod;
 import me.sunmisc.transflow.vk.requests.VkRequest;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.http.HttpClient;
 import java.util.Map;
 import java.util.Objects;
@@ -36,8 +37,20 @@ public class VPipeSource implements PipeSource {
                         new Audio[0], Integer.MAX_VALUE
                 ).trySplit(), "failed to split source");
     }
-
-    public VPipeSource(HttpClient client, String token, int ownerId) {
+    public VPipeSource(HttpClient client, String token, long ownerId, long playlistId) {
+        this(offset -> new VkRequest(
+                new VkWire("execute.getPlaylist", client),
+                new VkMethod(
+                        new MappedRequest(Map.of(
+                                "owner_id", ownerId,
+                                "audio_offset", offset,
+                                "audio_count", DEFAULT_PARTITION,
+                                "id", playlistId)
+                        ),
+                        token
+                )));
+    }
+    public VPipeSource(HttpClient client, String token, long ownerId) {
         this(offset -> new VkRequest(
                 new VkWire("audio.get", client),
                 new VkMethod(
@@ -107,24 +120,23 @@ public class VPipeSource implements PipeSource {
             try {
                 int off = offset + cursor;
                 Request request = function.apply(off);
-                return request.stream().map(x -> {
-                    try {
-                        JsonNode node = OBJECT_MAPPER.readTree(x);
-                        int estimateSize = node.findValue("count").asInt();
 
-                        Audio[] items = StreamSupport
-                                .stream(node.findValue("items").spliterator(), false)
-                                .map(r -> new VEncryptedAudio(new VAudio(r)))
-                                .toArray(Audio[]::new);
+                try (InputStream o = request.stream()) {
+                    JsonNode node = OBJECT_MAPPER.readTree(o);
+                    int estimateSize = node.findValue("count").asInt();
 
-                        return items.length == 0 ? null
-                                : new PartitionPlaylist(
-                                        function, off, items, estimateSize
-                        );
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                }).orElse(null);
+                    Audio[] items = StreamSupport
+                            .stream(node.findValue("items").spliterator(), false)
+                            .map(r -> new VEncryptedAudio(new VAudio(r)))
+                            .toArray(Audio[]::new);
+
+                    return items.length == 0 ? null
+                            : new PartitionPlaylist(
+                            function, off, items, estimateSize
+                    );
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }

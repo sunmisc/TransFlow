@@ -1,6 +1,6 @@
 package me.sunmisc.transflow.inputs;
 
-import java.util.Optional;
+import java.io.InputStream;
 import java.util.function.Supplier;
 
 public class EnvelopeInput implements Input {
@@ -16,7 +16,7 @@ public class EnvelopeInput implements Input {
     }
 
     @Override
-    public Optional<byte[]> stream() throws Exception {
+    public InputStream stream() throws Exception {
         return input.get().stream();
     }
 }

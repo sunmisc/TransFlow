@@ -1,39 +1,36 @@
 package me.sunmisc.transflow.inputs;
 
 
-import java.util.Arrays;
+import me.sunmisc.transflow.iterator.EnumerationAsIterator;
+import me.sunmisc.transflow.iterator.MappedIterator;
+
+import java.io.InputStream;
+import java.io.SequenceInputStream;
 import java.util.List;
-import java.util.Optional;
 
 @FunctionalInterface
 public interface Input {
 
-    Optional<byte[]> stream() throws Exception;
+    InputStream stream() throws Exception;
 
     class ConcatInput implements Input {
 
-        private static final byte[] EMPTY = new byte[0];
-        private final List<Input> inputs;
+        private final List<? extends Input> inputs;
 
-        public ConcatInput(List<Input> inputs) {
+        public ConcatInput(List<? extends Input> inputs) {
             this.inputs = inputs;
         }
-
         @Override
-        public Optional<byte[]> stream() throws Exception {
-            byte[] result = EMPTY;
-
-            for (Input input : inputs) {
-                byte[] buff = input.stream().orElse(EMPTY);
-                // COW
-                final int len = result.length, n = buff.length;
-                byte[] newElements = Arrays.copyOf(result, len + n);
-                System.arraycopy(buff, 0, newElements, len, n);
-                result = newElements;
-            }
-            return result == EMPTY
-                    ? Optional.empty()
-                    : Optional.of(result);
+        public InputStream stream() throws Exception {
+            return new SequenceInputStream(
+                    new EnumerationAsIterator<>(new MappedIterator<>(o -> {
+                        try {
+                            return o.stream();
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                    }, inputs.iterator()))
+            );
         }
     }
 }

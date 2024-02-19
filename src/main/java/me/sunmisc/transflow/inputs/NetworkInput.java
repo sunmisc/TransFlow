@@ -2,7 +2,6 @@ package me.sunmisc.transflow.inputs;
 
 import java.io.InputStream;
 import java.net.URI;
-import java.util.Optional;
 
 public final class NetworkInput implements Input {
 
@@ -13,9 +12,7 @@ public final class NetworkInput implements Input {
     }
 
     @Override
-    public Optional<byte[]> stream() throws Exception {
-        try (InputStream stream = uri.toURL().openStream()) {
-            return Optional.of(stream.readAllBytes());
-        }
+    public InputStream stream() throws Exception {
+        return uri.toURL().openStream();
     }
 }

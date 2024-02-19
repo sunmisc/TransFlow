@@ -8,14 +8,12 @@ import me.sunmisc.transflow.inputs.NetworkInput;
 import me.sunmisc.transflow.tls.Playlist;
 import me.sunmisc.transflow.tls.StartParsed;
 
+import java.io.InputStream;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Stream;
-
 
 public final class VEncryptedAudio implements Audio {
 
@@ -26,21 +24,23 @@ public final class VEncryptedAudio implements Audio {
     }
 
     @Override
-    public Optional<byte[]> stream() throws Exception {
+    public InputStream stream() throws Exception {
 
         String url = Objects.requireNonNull(
                 properties().get("url"),
                 "url is null");
 
         URI baseUri = URI.create(url.substring(0, url.lastIndexOf("/") + 1));
-        return new ConcatInput(
-                origin.stream().map(input -> {
-                    String data = new String(input, StandardCharsets.UTF_8);
 
-                    Playlist playlist = new StartParsed(data.lines().toList());
 
-                    return playlist.resources().map(resource -> {
+        try (InputStream o = origin.stream()) {
+            String data = new String(o.readAllBytes(), StandardCharsets.UTF_8);
 
+            Playlist playlist = new StartParsed(data.lines().toList());
+
+            return new ConcatInput(playlist
+                    .resources()
+                    .map(resource -> {
                         Input src = new NetworkInput(baseUri.resolve(resource.uri()));
                         return resource.find("EXT-X-KEY").map(x -> {
                             Map<String, String> prop = x.params();
@@ -59,9 +59,10 @@ public final class VEncryptedAudio implements Audio {
                             }
                             return src;
                         }).orElse(src);
-                    }).toList();
-                }).orElse(List.of())
-        ).stream();
+                    })
+                    .toList()
+            ).stream();
+        }
     }
     @Override
     public long id() {

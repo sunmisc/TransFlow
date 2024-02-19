@@ -7,7 +7,6 @@ import me.sunmisc.transflow.Author;
 import java.io.InputStream;
 import java.net.URI;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -19,15 +18,11 @@ public final class VAudio implements Audio {
     }
 
     @Override
-    public Optional<byte[]> stream() throws Exception {
+    public InputStream stream() throws Exception {
         String url = node.findValue("url").asText();
         if (url == null || url.isEmpty())
-            return Optional.empty();
-        try (InputStream bs = URI.create(url).toURL().openStream()) {
-            return Optional.of(bs.readAllBytes());
-        } catch (Exception e) {
-            throw new RuntimeException("failed url: " + url);
-        }
+            return InputStream.nullInputStream();
+        return URI.create(url).toURL().openStream();
     }
     @Override
     public long id() {
