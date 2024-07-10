@@ -64,9 +64,6 @@ public final class Main {
                             )
                     )
             );
-            dispatcher.execute(
-                    "playlist \"vk1.a.sfZgM-J4DUaArAcBHU-VwG8tlcRyDhE2corO2Yt2LMpKimuQXL1a6L-KPiX_UbsVQcpjj2AOu3v2wahDdczADvfbajZDLF4aI_FVArBZwhw-0JEZ2SWZsPX2Gkxk-4_NbgX5pxxHSNlTh7VORqajddZIdGmVOtVOOiR2Dtn0FWp8N4ali5nKuIC_0QdM3Ek_\" \"/media/sunmisc/shared_ntfs/bench\" 616057755", null);
-
             System.out.println(new ConcatText(dispatcher
                     .getSmartUsage(dispatcher.getRoot(), null)
                     .values(), "\n"));
