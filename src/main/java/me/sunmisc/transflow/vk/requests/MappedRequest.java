@@ -1,9 +1,8 @@
 package me.sunmisc.transflow.vk.requests;
 
-
 import me.sunmisc.transflow.inputs.Input;
-import me.sunmisc.transflow.io.QBytesInputStream;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -20,7 +19,7 @@ public class MappedRequest implements Input {
         this.origin = origin;
     }
     public MappedRequest(Map<String, Object> map) {
-        this(() -> new QBytesInputStream(map
+        this(() -> new ByteArrayInputStream(map
                 .entrySet()
                 .stream()
                 .map(e -> {

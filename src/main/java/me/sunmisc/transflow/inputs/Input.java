@@ -23,13 +23,15 @@ public interface Input {
         @Override
         public InputStream stream() throws Exception {
             return new SequenceInputStream(
-                    new EnumerationAsIterator<>(new MappedIterator<>(o -> {
-                        try {
-                            return o.stream();
-                        } catch (Exception e) {
-                            throw new RuntimeException(e);
-                        }
-                    }, inputs.iterator()))
+                    new EnumerationAsIterator<>(
+                            new MappedIterator<>(o -> {
+                                try {
+                                    return o.stream();
+                                } catch (Exception e) {
+                                    throw new RuntimeException(e);
+                                }
+                            }, inputs.iterator())
+                    )
             );
         }
     }

@@ -10,7 +10,6 @@ import me.sunmisc.transflow.vk.requests.Request;
 import me.sunmisc.transflow.vk.requests.VkMethod;
 import me.sunmisc.transflow.vk.requests.VkRequest;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.http.HttpClient;
 import java.util.Map;
@@ -20,13 +19,13 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.StreamSupport;
 
-public class VPipeSource implements PipeSource {
+public class VPipeSource implements PipeSource<Audio> {
 
     private static final ObjectMapper OBJECT_MAPPER
             = new ObjectMapper();
 
     // threshold
-    private static final int DEFAULT_PARTITION = 64;
+    private static final int DEFAULT_PARTITION = 128;
 
     private final Spliterator<Audio> spliterator;
 
@@ -134,8 +133,6 @@ public class VPipeSource implements PipeSource {
                             : new PartitionPlaylist(
                             function, off, items, estimateSize
                     );
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
                 }
             } catch (Exception e) {
                 throw new RuntimeException(e);
@@ -149,7 +146,7 @@ public class VPipeSource implements PipeSource {
 
         @Override
         public int characteristics() {
-            return CONCURRENT | NONNULL | ORDERED;
+            return NONNULL | ORDERED | SUBSIZED;
         }
     }
 }

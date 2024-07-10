@@ -7,7 +7,9 @@ import me.sunmisc.transflow.text.FormattedText;
 import me.sunmisc.transflow.text.ProgressBarText;
 import me.sunmisc.transflow.vk.pipeline.VPipeSource;
 
+import java.io.IOException;
 import java.net.http.HttpClient;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -38,32 +40,32 @@ public final class Main {
                     .then(argument("token", string())
                             .then(argument("output", string())
                                     .then(argument("ownerId", longArg())
-                                            .then(argument("playlistId", longArg())
-                                                    .executes(context -> {
-                                                        String token = getString(context, "token");
-                                                        long ownerId = getLong(context, "ownerId");
-                                                        long playlistId = getLong(context, "playlistId");
-
-                                                        Path path = Path.of(getString(context, "output"));
-
-                                                        return download(new VPipeSource(
-                                                                httpClient,
-                                                                token, ownerId,
-                                                                playlistId), path);
-                                                    })
-                                            ).executes(context -> {
+                                            .executes(context -> {
                                                 String token = getString(context, "token");
                                                 long ownerId = getLong(context, "ownerId");
-                                                Path path = Path.of(getString(context, "output"));
+                                                Path path = Path
+                                                        .of(getString(context, "output"))
+                                                        .resolve(String.valueOf(ownerId));
+
+                                                if (Files.notExists(path)) {
+                                                    try {
+                                                        Files.createDirectory(path);
+                                                    } catch (IOException e) {
+                                                        throw new RuntimeException(e);
+                                                    }
+                                                }
 
                                                 return download(new VPipeSource(
-                                                        httpClient,
-                                                        token, ownerId), path);
+                                                                httpClient,
+                                                                token, ownerId),
+                                                        path);
                                             })
                                     )
                             )
                     )
             );
+            dispatcher.execute(
+                    "playlist \"vk1.a.sfZgM-J4DUaArAcBHU-VwG8tlcRyDhE2corO2Yt2LMpKimuQXL1a6L-KPiX_UbsVQcpjj2AOu3v2wahDdczADvfbajZDLF4aI_FVArBZwhw-0JEZ2SWZsPX2Gkxk-4_NbgX5pxxHSNlTh7VORqajddZIdGmVOtVOOiR2Dtn0FWp8N4ali5nKuIC_0QdM3Ek_\" \"/media/sunmisc/shared_ntfs/bench\" 616057755", null);
 
             System.out.println(new ConcatText(dispatcher
                     .getSmartUsage(dispatcher.getRoot(), null)
@@ -77,7 +79,7 @@ public final class Main {
         }
     }
 
-    private static int download(PipeSource ps, Path to) {
+    private static int download(PipeSource<Audio> ps, Path to) {
         long size = ps.estimateSize();
 
         Fallback<Audio, AudioDownloadException>

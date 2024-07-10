@@ -1,40 +1,19 @@
 package me.sunmisc.transflow;
 
+import me.sunmisc.transflow.inputs.Input;
+
 import java.util.Objects;
 import java.util.Spliterator;
 import java.util.function.Consumer;
 
-public interface PipeSource extends Spliterator<Audio> {
+public interface PipeSource<E extends Input> extends Spliterator<E> {
 
 
-    default void allForEach(Consumer<Audio> action) {
+    default void allForEach(Consumer<E> action) {
         Objects.requireNonNull(action);
-        Spliterator<Audio> src = this;
+        Spliterator<E> src = this;
         do {
             src.forEachRemaining(action);
         } while ((src = src.trySplit()) != null);
-    }
-
-    class Empty implements PipeSource {
-
-        @Override
-        public boolean tryAdvance(Consumer<? super Audio> action) {
-            return false;
-        }
-
-        @Override
-        public Spliterator<Audio> trySplit() {
-            return null;
-        }
-
-        @Override
-        public long estimateSize() {
-            return 0;
-        }
-
-        @Override
-        public int characteristics() {
-            return 0;
-        }
     }
 }

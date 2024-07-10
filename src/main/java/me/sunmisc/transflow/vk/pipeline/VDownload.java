@@ -2,9 +2,9 @@ package me.sunmisc.transflow.vk.pipeline;
 
 import me.sunmisc.transflow.Audio;
 import me.sunmisc.transflow.Download;
-import me.sunmisc.transflow.io.QBytesOutputStream;
 import me.sunmisc.transflow.text.FilenameNormalized;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -36,7 +36,7 @@ public final class VDownload implements Download<Audio> {
 
         try (InputStream is = input.stream();
              OutputStream os = Files.newOutputStream(to);
-             QBytesOutputStream buff = new QBytesOutputStream()) {
+             ByteArrayOutputStream buff = new ByteArrayOutputStream()) {
 
             byte[] bytes = is.readAllBytes();
 

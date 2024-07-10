@@ -8,10 +8,10 @@ import java.util.concurrent.StructuredTaskScope;
 
 public class DownloadSink implements Runnable {
     private final Fallback<Audio, AudioDownloadException> fallback;
-    private final PipeSource source;
+    private final PipeSource<Audio> source;
     private final Path to;
 
-    public DownloadSink(PipeSource source, Path path) {
+    public DownloadSink(PipeSource<Audio> source, Path path) {
         this(new Fallback<>() {
             @Override public void success(Audio result) { }
             @Override public void exception(AudioDownloadException e) {}
@@ -19,7 +19,7 @@ public class DownloadSink implements Runnable {
     }
 
     public DownloadSink(Fallback<Audio, AudioDownloadException> fallback,
-                        PipeSource source, Path path) {
+                        PipeSource<Audio> source, Path path) {
         this.fallback = fallback;
         this.source = source;
         this.to = path;

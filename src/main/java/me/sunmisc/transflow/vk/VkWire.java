@@ -1,6 +1,5 @@
 package me.sunmisc.transflow.vk;
 
-import me.sunmisc.transflow.io.QBytesInputStream;
 import me.sunmisc.transflow.vk.requests.Request;
 
 import java.io.InputStream;
@@ -38,8 +37,8 @@ public class VkWire implements Wire {
                             }
                         }))
                 .build();
-        HttpResponse<byte[]> response =
-                client.send(req, HttpResponse.BodyHandlers.ofByteArray());
+        HttpResponse<InputStream> response =
+                client.send(req, HttpResponse.BodyHandlers.ofInputStream());
         return new WrapResponse(response);
     }
 
@@ -65,7 +64,7 @@ public class VkWire implements Wire {
     }
 
     private record WrapResponse(
-            HttpResponse<byte[]> response
+            HttpResponse<InputStream> response
     ) implements Response {
 
         @Override
@@ -75,7 +74,7 @@ public class VkWire implements Wire {
 
         @Override
         public InputStream stream() {
-            return new QBytesInputStream(response.body());
+            return response.body();
         }
 
         @Override
