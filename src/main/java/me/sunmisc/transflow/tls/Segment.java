@@ -10,9 +10,7 @@ public interface Segment {
 
     Stream<Directive> directives();
 
-
     Optional<Directive> find(String name);
-
 
     void add(Directive directive);
 

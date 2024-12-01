@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-public class SimpleSegment implements Segment {
+public final class SimpleSegment implements Segment {
 
     private final Map<String, Directive> directives
             = new LinkedHashMap<>();

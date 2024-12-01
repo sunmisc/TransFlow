@@ -7,6 +7,5 @@ public interface Playlist {
 
     Stream<Segment> resources();
 
-
     Map<String, Directive> metadata();
 }

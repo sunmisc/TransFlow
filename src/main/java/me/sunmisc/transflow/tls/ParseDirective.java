@@ -1,10 +1,12 @@
 package me.sunmisc.transflow.tls;
 
-import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class ParseDirective implements Directive {
+    private static final Pattern SPLIT = Pattern.compile(",\\s*");
     private final String identifier;
     private final String args;
 
@@ -22,14 +24,13 @@ public class ParseDirective implements Directive {
     }
 
     @Override
-    public List<String> arguments() {
-        return List.of(args.split(",\\s*"));
+    public Stream<String> arguments() {
+        return SPLIT.splitAsStream(args);
     }
 
     @Override
     public Map<String, String> params() {
         return arguments()
-                .stream()
                 .map(x -> x.split("=", 2))
                 .filter(x -> x.length == 2)
                 .collect(Collectors.toUnmodifiableMap(

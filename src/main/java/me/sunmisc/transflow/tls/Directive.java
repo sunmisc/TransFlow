@@ -1,13 +1,13 @@
 package me.sunmisc.transflow.tls;
 
-import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 public interface Directive {
 
     String identifier();
 
-    List<String> arguments();
+    Stream<String> arguments();
 
     Map<String, String> params();
 }
