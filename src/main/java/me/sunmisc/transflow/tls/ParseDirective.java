@@ -5,7 +5,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class ParseDirective implements Directive {
+public final class ParseDirective implements Directive {
     private static final Pattern SPLIT = Pattern.compile(",\\s*");
     private final String identifier;
     private final String args;

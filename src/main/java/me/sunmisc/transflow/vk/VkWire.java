@@ -9,7 +9,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.stream.Stream;
 
-public class VkWire implements Wire {
+public final class VkWire implements Wire {
     private static final URI API_URL = URI.create(
             "https://api.vk.com/method/");
     private final String uri;

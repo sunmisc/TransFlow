@@ -6,7 +6,7 @@ import java.nio.file.Path;
 import java.util.Spliterator;
 import java.util.concurrent.StructuredTaskScope;
 
-public class DownloadSink implements Runnable {
+public final class DownloadSink implements Runnable {
     private final Fallback<Audio, AudioDownloadException> fallback;
     private final PipeSource<Audio> source;
     private final Path to;

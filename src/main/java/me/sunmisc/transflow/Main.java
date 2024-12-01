@@ -16,6 +16,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -35,7 +36,9 @@ public final class Main {
 
         CommandDispatcher<Object> dispatcher = new CommandDispatcher<>();
 
-        try (HttpClient httpClient = HttpClient.newHttpClient()) {
+        try (HttpClient httpClient = HttpClient.newBuilder()
+                .executor(Executors.newVirtualThreadPerTaskExecutor())
+                .build()) {
             dispatcher.register(literal("playlist")
                     .then(argument("token", string())
                             .then(argument("output", string())
